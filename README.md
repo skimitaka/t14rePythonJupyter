@@ -12,7 +12,8 @@ rye add opencv-python
 rye add scipy==1.7.1
 rye add numpy==1.21.5
 rye add pyserial==3.5
-rye add jupyter==1.0.0
+rye add jupyter==1.1.1
+rye add ipdb
 rye sync
 
 # jupyter notebookの起動

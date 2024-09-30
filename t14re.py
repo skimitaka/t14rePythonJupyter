@@ -10,36 +10,48 @@ import threading
 import os
 import glob
 import sys
+# from ipdb import set_trace as st
 
 class T14re():
-    def __init__(self):
+    def __init__(self, DefaultFolderName='data_t14re', COM_port=''):
         self.config = 0
+        self.config_name = ''
+        self.COM_port = ''
         self.q = queue.Queue(-1)
         self.q_name = queue.Queue(-1)
         self.isStopped = False
         self.isConnected = False
         self.cap = 0
-        self.DefaultFolderName = 'data_t14re'
+        self.DefaultFolderName = DefaultFolderName
         self.framecnt = 0
         self.getfilecnt = 0
         self.savefilecnt = 0
         self.MaxFiles = 0
     
-    def get_com_port(self):
+    def get_com_port(self):            
         ports = list_ports.comports()
+        port_device_list = [p.device for p in port_list]
+        
         if not ports:
             print('Error: No COM ports. Check connection.',file=sys.stderr)
+            return False
+ 
+        if self.COM_port:
+            if self.COM_port in port_device_list:
+                return self.COM_port        
         else:
             for p in ports:
                 if 'USB' in p.description and p.location[-1:] == '2': # for MMIC (MI_02)
                     print('Selected port: ' + p.device)
                     return p.device
-        return False
+        
         
     def load_and_send_config(self,cfgname):
         self.config = Config()
         COM_port_for_MMIC = self.get_com_port()
+        print(f'=debug this COM {COM_port_for_MMIC}')
         self.config.send_config(cfgname,COM_port_for_MMIC)
+        self.config_name = cfgname
     
     def connect_and_setup_radar(self,CaptureDeviceIndex):
         # get VideoCapture object
@@ -84,14 +96,18 @@ class T14re():
             filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f_')
             filename = filename + str(int(self.config.Fs)) + 'fps_' + str(self.getfilecnt) + '.bin'
             self.q_name.put(filename)
-            print('\rfilecnt:',self.getfilecnt, end='')
+            # sys.stdout.write(f'\rfilecnt: {self.getfilecnt}')
+            # sys.stdout.flush()
+            # print(self.getfilecnt)
+            print(f'\rfilecnt: {self.getfilecnt}', end='')
         print('\nFinish')
     
     def save_data(self):
         '''
         Save data with binary.
         '''
-        foldername = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f_t14re')
+        foldername_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+        foldername = foldername_time + '_' + self.config_name.replace('.cfg', '')
         os.makedirs(self.DefaultFolderName + '/' + foldername)
         print('foldername:',foldername)
         
