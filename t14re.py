@@ -30,7 +30,7 @@ class T14re():
     
     def get_com_port(self):            
         ports = list_ports.comports()
-        port_device_list = [p.device for p in port_list]
+        port_device_list = [p.device for p in ports]
         
         if not ports:
             print('Error: No COM ports. Check connection.',file=sys.stderr)
